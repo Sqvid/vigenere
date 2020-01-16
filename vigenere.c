@@ -1,8 +1,3 @@
-/* To Do:
- * 	+ Implement decryption.
- * 	+ Make punctuation preservation optional.
- * 	+ Add help option.
-*/
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -14,6 +9,19 @@
 #define BUFFER_SIZE 2048
 #define MAX_KEY_SIZE 2048
 
+char helpmsg[] =
+"This program enciphers and deciphers text using the \
+Vigenere cipher.\n\
+Usage: [-h] [-p] [-d] -k <key> (-i | -f <file>)\n\n\
+Options:\n\
+-h\t\t-- Shows this help page.\n\
+-i\t\t-- Sets the program to interactive mode. (Cannot be used with -f)\n\
+-f <file>\t-- Specifies the input file. (Cannot be used with -i)\n\
+-k <key>\t-- Specifies the cipher key.\n\
+-d\t\t-- Sets the program to decryption mode.\n\
+-p\t\t-- Preserves case, punctuation, and spacing. (Less secure)\n";
+
+
 int main(int argc, char* argv[]){
 	extern char* optarg;
 	int f_optflag = 0, d_optflag = 0, i_optflag = 0, k_optflag = 0, p_optflag = 0;
@@ -23,12 +31,13 @@ int main(int argc, char* argv[]){
 	char opt;
 	char key[MAX_KEY_SIZE];
 
-	while((opt = getopt(argc, argv, "if:k:dp")) != -1){
+	while((opt = getopt(argc, argv, "if:k:dph")) != -1){
 		switch(opt){
 			// Interactive mode.
 			case 'i':
 				if(f_optflag == 1){
 					fprintf(stderr, "The -i and -f flags cannot be used together.\n");
+					printf("For help use the -h option.\n");
 					exit(1);
 				}
 
@@ -39,6 +48,7 @@ int main(int argc, char* argv[]){
 			case 'f':
 				if(i_optflag == 1){
 					fprintf(stderr, "The -i and -f flags cannot be used together.\n");
+					printf("For help use the -h option.\n");
 					exit(1);
 				}
 
@@ -75,8 +85,18 @@ int main(int argc, char* argv[]){
 			case 'p':
 				p_optflag = 1;
 				break;
+			case 'h':
+				if(i_optflag == 1 || f_optflag == 1 || k_optflag == 1\
+						|| d_optflag == 1 || p_optflag == 1){
+
+					fprintf(stderr, "Do not run the -h option with any other arguments.\n");
+					exit(1);
+				}
+
+				printf("%s", helpmsg);
+				return 0;
 			case '?':
-				fprintf(stderr, "Usage -k <key> [-d] (-i | -f <filename>)\n");
+				printf("For help use the -h option.\n");
 				exit(1);
 				break;
 		}
@@ -96,47 +116,88 @@ int main(int argc, char* argv[]){
 		//shift = 26 - shift;
 	}
 
-	char linebuffer[BUFFER_SIZE], cleanbuffer[BUFFER_SIZE];
-	int shift = 0, decrypt_shift = 0, keyind = 0;
+	char linebuffer[BUFFER_SIZE];
+	int shift = 0, decrypt_shift = 0, key_ind = 0;
 
 	while(fgets(linebuffer, sizeof(linebuffer), plaintext) != NULL){
+		char cleanbuffer[BUFFER_SIZE] = "\0";
+		int j = 0;
+
 		for(int i=0; i<BUFFER_SIZE; ++i){
 			if(linebuffer[i] == '\n' || linebuffer[i] == '\0'){
+				if(p_optflag == 0){
+					cleanbuffer[j] = linebuffer[i];
+					++j;
+				}
+
 				break;
 			}
 
-			//if(p_optflag == 0){
-			//	if(isalpha(linebuffer[i]) && isupper(linebuffer)){
-			//		cleanbuffer[i] = tolower(linebuffer[i]);
-			//	}
-
-			//	cleanbuffer[i] = linebuffer[i];
-			//}
-
 			if(isalpha(linebuffer[i])){
+				// Lowercase:
 				if(islower(linebuffer[i])){
+					// Lowercase encryption:
 					if(d_optflag == 0){
-						shift = key[keyind % keylen] - 'a';
-						linebuffer[i] = LOW_CAESER(linebuffer[i]);
+						shift = key[key_ind % keylen] - 'a';
+
+						// Without format preservation:
+						if(p_optflag == 0){
+							cleanbuffer[j] = LOW_CAESER(linebuffer[i]);
+							++j;
+						// With format preservation:
+						} else{
+							linebuffer[i] = LOW_CAESER(linebuffer[i]);
+						}
+					// Lowercase decryption:
 					} else{
-						decrypt_shift = linebuffer[i] - key[keyind % keylen] + 'a';
-						linebuffer[i] = decrypt_shift < 'a' ? decrypt_shift + 26 : decrypt_shift;
+						decrypt_shift = linebuffer[i] - key[key_ind % keylen] + 'a';
+
+						// Without format preservation:
+						if(p_optflag == 0){
+							cleanbuffer[j] = decrypt_shift < 'a' ? decrypt_shift + 26 : decrypt_shift;
+							++j;
+						// With format preservation:
+						} else{
+							linebuffer[i] = decrypt_shift < 'a' ? decrypt_shift + 26 : decrypt_shift;
+						}
 					}
+				// Uppercase:
 				} else{
+					// Uppercase encryption:
 					if(d_optflag == 0){
-						shift = key[keyind % keylen] - 'a';
-						linebuffer[i] = UP_CAESER(linebuffer[i]);
+						shift = key[key_ind % keylen] - 'a';
+
+						if(p_optflag == 0){
+							cleanbuffer[j] = tolower(UP_CAESER(linebuffer[i]));
+							++j;
+						// With format preservation:
+						} else{
+							linebuffer[i] = UP_CAESER(linebuffer[i]);
+						}
+					// Uppercase decryption:
 					} else{
-						decrypt_shift = linebuffer[i] - toupper(key[keyind % keylen]) + 'A';
-						linebuffer[i] = decrypt_shift < 'A' ? decrypt_shift + 26 : decrypt_shift;
+						// Without format preservation:
+						if(p_optflag == 0){
+							decrypt_shift = tolower(linebuffer[i]) - key[key_ind % keylen] + 'a';
+							cleanbuffer[j] = decrypt_shift < 'a' ? decrypt_shift + 26 : decrypt_shift;
+							++j;
+						// With format preservation:
+						} else{
+							decrypt_shift = linebuffer[i] - toupper(key[key_ind % keylen]) + 'A';
+							linebuffer[i] = decrypt_shift < 'A' ? decrypt_shift + 26 : decrypt_shift;
+						}
 					}
 				}
 
-				++keyind;
+				++key_ind;
 			}
 		}
 
-		printf("%s", linebuffer);
+		if(p_optflag == 1){
+			printf("%s", linebuffer);
+		} else{
+			printf("%s", cleanbuffer);
+		}
 	}
 
 	fclose(plaintext);
