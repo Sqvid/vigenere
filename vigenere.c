@@ -63,8 +63,8 @@ int main(int argc, char* argv[]){
 				break;
 			// Encryption/decryption key.
 			case 'k':
-				strncpy(key, optarg, sizeof(key) - 1);
-				keylen = strlen(key);
+				strncpy(key, optarg, sizeof(key));
+				keylen = strnlen(key, sizeof(key));
 
 				for(int i=0; i<keylen; ++i){
 					if(! isalpha(key[i])){
