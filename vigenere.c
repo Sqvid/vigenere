@@ -6,8 +6,8 @@
 
 #define LOW_CAESER(letter) (letter - 'a' + shift) % 26 + 'a'
 #define UP_CAESER(LETTER) (LETTER - 'A' + shift) % 26 + 'A'
-#define BUFFER_SIZE 2048
-#define MAX_KEY_SIZE 2048
+#define BUFFER_SIZE 4096
+#define MAX_KEY_SIZE BUFFER_SIZE
 
 char helpmsg[] =
 "This program enciphers and deciphers text using the \
@@ -124,13 +124,18 @@ int main(int argc, char* argv[]){
 		int j = 0;
 
 		for(int i=0; i<BUFFER_SIZE; ++i){
-			if(linebuffer[i] == '\n' || linebuffer[i] == '\0'){
+			if(isdigit(linebuffer[i]) || linebuffer[i] == '\n' || linebuffer[i] == '\0'){
 				if(p_optflag == 0){
 					cleanbuffer[j] = linebuffer[i];
 					++j;
 				}
 
-				break;
+				// Keep going when numbers are encountered.
+				if(isdigit(linebuffer[i])){
+					continue;
+				} else{
+					break;
+				}
 			}
 
 			if(isalpha(linebuffer[i])){
