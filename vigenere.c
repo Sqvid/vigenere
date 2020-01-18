@@ -4,9 +4,9 @@
 #include <ctype.h>
 #include <unistd.h>
 
-#define CLEAN_CAESER(letter) (tolower(letter) - 'a' + shift) % 26 + 'a'
-#define LOW_CAESER(letter) (letter - 'a' + shift) % 26 + 'a'
-#define UP_CAESER(LETTER) (LETTER - 'A' + shift) % 26 + 'A'
+#define CLEAN_CAESAR(letter) (tolower(letter) - 'a' + shift) % 26 + 'a'
+#define LOW_CAESAR(letter) (letter - 'a' + shift) % 26 + 'a'
+#define UP_CAESAR(LETTER) (LETTER - 'A' + shift) % 26 + 'A'
 #define MAX_KEY_SIZE 4096
 
 char helpmsg[] =
@@ -137,7 +137,7 @@ int main(int argc, char* argv[]){
 				if(d_optflag == 0){
 					shift = key[key_ind % keylen] - 'a';
 
-					cleanletter = CLEAN_CAESER(rawletter);
+					cleanletter = CLEAN_CAESAR(rawletter);
 					++j;
 				// Decryption:
 				} else{
@@ -158,9 +158,9 @@ int main(int argc, char* argv[]){
 					shift = key[key_ind % keylen] - 'a';
 
 					if(islower(rawletter)){
-						rawletter = LOW_CAESER(rawletter);
+						rawletter = LOW_CAESAR(rawletter);
 					} else{
-						rawletter = UP_CAESER(rawletter);
+						rawletter = UP_CAESAR(rawletter);
 					}
 				// Decryption:
 				} else{
