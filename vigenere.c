@@ -124,14 +124,10 @@ int main(int argc, char* argv[]){
 		char cleanletter = '\0';
 		int j = 0;
 
-		if((isdigit(rawletter) || rawletter == '\n' || rawletter == '\0')\
-				&& p_optflag == 0){
-
+		if((isdigit(rawletter) || rawletter == '\n') && p_optflag == 0){
 			cleanletter = rawletter;
 			++j;
-		}
-
-		if(isalpha(rawletter)){
+		} else if(isalpha(rawletter)){
 			if(p_optflag == 0){
 				// Encryption:
 				if(d_optflag == 0){
@@ -181,6 +177,10 @@ int main(int argc, char* argv[]){
 						}
 					}
 				}
+			}
+		} else{
+			if(p_optflag == 0){
+				continue;
 			}
 		}
 
