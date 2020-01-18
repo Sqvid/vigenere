@@ -63,7 +63,7 @@ int main(int argc, char* argv[]){
 				break;
 			// Encryption/decryption key.
 			case 'k':
-				strncpy(key, optarg, sizeof(key));
+				snprintf(key, sizeof(key), optarg);
 				keylen = strnlen(key, sizeof(key));
 
 				for(int i=0; i<keylen; ++i){
