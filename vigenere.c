@@ -6,8 +6,7 @@
 
 #define LOW_CAESER(letter) (letter - 'a' + shift) % 26 + 'a'
 #define UP_CAESER(LETTER) (LETTER - 'A' + shift) % 26 + 'A'
-#define BUFFER_SIZE 4096
-#define MAX_KEY_SIZE BUFFER_SIZE
+#define MAX_KEY_SIZE 4096
 
 char helpmsg[] =
 "This program enciphers and deciphers text using the \
@@ -116,92 +115,84 @@ int main(int argc, char* argv[]){
 		//shift = 26 - shift;
 	}
 
-	char linebuffer[BUFFER_SIZE];
+	char rawletter;
 	int shift = 0, decrypt_shift = 0, key_ind = 0;
 
-	while(fgets(linebuffer, sizeof(linebuffer), plaintext) != NULL){
-		char cleanbuffer[BUFFER_SIZE] = "\0";
+	while((rawletter = fgetc(plaintext)) != EOF){
+		// Like rawletter but will only hold alphanumeric characters.
+		char cleanletter = '\0';
 		int j = 0;
 
-		for(int i=0; i<BUFFER_SIZE; ++i){
-			if(isdigit(linebuffer[i]) || linebuffer[i] == '\n' || linebuffer[i] == '\0'){
-				if(p_optflag == 0){
-					cleanbuffer[j] = linebuffer[i];
-					++j;
-				}
+		if((isdigit(rawletter) || rawletter == '\n' || rawletter == '\0')\
+				&& p_optflag == 0){
 
-				// Keep going when numbers are encountered.
-				if(isdigit(linebuffer[i])){
-					continue;
-				} else{
-					break;
-				}
-			}
-
-			if(isalpha(linebuffer[i])){
-				// Lowercase:
-				if(islower(linebuffer[i])){
-					// Lowercase encryption:
-					if(d_optflag == 0){
-						shift = key[key_ind % keylen] - 'a';
-
-						// Without format preservation:
-						if(p_optflag == 0){
-							cleanbuffer[j] = LOW_CAESER(linebuffer[i]);
-							++j;
-						// With format preservation:
-						} else{
-							linebuffer[i] = LOW_CAESER(linebuffer[i]);
-						}
-					// Lowercase decryption:
-					} else{
-						decrypt_shift = linebuffer[i] - key[key_ind % keylen] + 'a';
-
-						// Without format preservation:
-						if(p_optflag == 0){
-							cleanbuffer[j] = decrypt_shift < 'a' ? decrypt_shift + 26 : decrypt_shift;
-							++j;
-						// With format preservation:
-						} else{
-							linebuffer[i] = decrypt_shift < 'a' ? decrypt_shift + 26 : decrypt_shift;
-						}
-					}
-				// Uppercase:
-				} else{
-					// Uppercase encryption:
-					if(d_optflag == 0){
-						shift = key[key_ind % keylen] - 'a';
-
-						if(p_optflag == 0){
-							cleanbuffer[j] = tolower(UP_CAESER(linebuffer[i]));
-							++j;
-						// With format preservation:
-						} else{
-							linebuffer[i] = UP_CAESER(linebuffer[i]);
-						}
-					// Uppercase decryption:
-					} else{
-						// Without format preservation:
-						if(p_optflag == 0){
-							decrypt_shift = tolower(linebuffer[i]) - key[key_ind % keylen] + 'a';
-							cleanbuffer[j] = decrypt_shift < 'a' ? decrypt_shift + 26 : decrypt_shift;
-							++j;
-						// With format preservation:
-						} else{
-							decrypt_shift = linebuffer[i] - toupper(key[key_ind % keylen]) + 'A';
-							linebuffer[i] = decrypt_shift < 'A' ? decrypt_shift + 26 : decrypt_shift;
-						}
-					}
-				}
-
-				++key_ind;
-			}
+			cleanletter = rawletter;
+			++j;
 		}
 
-		if(p_optflag == 1){
-			printf("%s", linebuffer);
+		if(isalpha(rawletter)){
+			// Lowercase:
+			if(islower(rawletter)){
+				// Lowercase encryption:
+				if(d_optflag == 0){
+					shift = key[key_ind % keylen] - 'a';
+
+					// Without format preservation:
+					if(p_optflag == 0){
+						cleanletter = LOW_CAESER(rawletter);
+						++j;
+					// With format preservation:
+					} else{
+						rawletter = LOW_CAESER(rawletter);
+					}
+				// Lowercase decryption:
+				} else{
+					decrypt_shift = rawletter - key[key_ind % keylen] + 'a';
+
+					// Without format preservation:
+					if(p_optflag == 0){
+						cleanletter = decrypt_shift < 'a' ? decrypt_shift + 26 : decrypt_shift;
+						++j;
+					// With format preservation:
+					} else{
+						rawletter = decrypt_shift < 'a' ? decrypt_shift + 26 : decrypt_shift;
+					}
+				}
+			// Uppercase:
+			} else{
+				// Uppercase encryption:
+				if(d_optflag == 0){
+					shift = key[key_ind % keylen] - 'a';
+
+					if(p_optflag == 0){
+						cleanletter = tolower(UP_CAESER(rawletter));
+						++j;
+					// With format preservation:
+					} else{
+						rawletter = UP_CAESER(rawletter);
+					}
+				// Uppercase decryption:
+				} else{
+					// Without format preservation:
+					if(p_optflag == 0){
+						decrypt_shift = tolower(rawletter) - key[key_ind % keylen] + 'a';
+						cleanletter = decrypt_shift < 'a' ? decrypt_shift + 26 : decrypt_shift;
+						++j;
+					// With format preservation:
+					} else{
+						decrypt_shift = rawletter - toupper(key[key_ind % keylen]) + 'A';
+						rawletter = decrypt_shift < 'A' ? decrypt_shift + 26 : decrypt_shift;
+					}
+				}
+			}
+
+			++key_ind;
+		}
+
+		if(p_optflag == 0){
+			printf("%c", cleanletter);
 		} else{
-			printf("%s", cleanbuffer);
+			printf("%c", rawletter);
 		}
 	}
 
