@@ -4,6 +4,7 @@
 #include <ctype.h>
 #include <unistd.h>
 
+#define CLEAN_CAESER(letter) (tolower(letter) - 'a' + shift) % 26 + 'a'
 #define LOW_CAESER(letter) (letter - 'a' + shift) % 26 + 'a'
 #define UP_CAESER(LETTER) (LETTER - 'A' + shift) % 26 + 'A'
 #define MAX_KEY_SIZE 4096
@@ -131,62 +132,56 @@ int main(int argc, char* argv[]){
 		}
 
 		if(isalpha(rawletter)){
-			// Lowercase:
-			if(islower(rawletter)){
-				// Lowercase encryption:
+			if(p_optflag == 0){
+				// Encryption:
 				if(d_optflag == 0){
 					shift = key[key_ind % keylen] - 'a';
 
-					// Without format preservation:
-					if(p_optflag == 0){
-						cleanletter = LOW_CAESER(rawletter);
-						++j;
-					// With format preservation:
-					} else{
-						rawletter = LOW_CAESER(rawletter);
-					}
-				// Lowercase decryption:
+					cleanletter = CLEAN_CAESER(rawletter);
+					++j;
+				// Decryption:
 				} else{
-					decrypt_shift = rawletter - key[key_ind % keylen] + 'a';
+					decrypt_shift = tolower(rawletter) \
+							- key[key_ind % keylen];
 
-					// Without format preservation:
-					if(p_optflag == 0){
-						cleanletter = decrypt_shift < 'a' ? decrypt_shift + 26 : decrypt_shift;
-						++j;
-					// With format preservation:
+					if(decrypt_shift < 0){
+						cleanletter = decrypt_shift + 26 + 'a';
 					} else{
-						rawletter = decrypt_shift < 'a' ? decrypt_shift + 26 : decrypt_shift;
+						cleanletter = decrypt_shift + 'a';
 					}
+
+					++j;
 				}
-			// Uppercase:
 			} else{
-				// Uppercase encryption:
+				// Encryption:
 				if(d_optflag == 0){
 					shift = key[key_ind % keylen] - 'a';
 
-					if(p_optflag == 0){
-						cleanletter = tolower(UP_CAESER(rawletter));
-						++j;
-					// With format preservation:
+					if(islower(rawletter)){
+						rawletter = LOW_CAESER(rawletter);
 					} else{
 						rawletter = UP_CAESER(rawletter);
 					}
-				// Uppercase decryption:
+				// Decryption:
 				} else{
-					// Without format preservation:
-					if(p_optflag == 0){
-						decrypt_shift = tolower(rawletter) - key[key_ind % keylen] + 'a';
-						cleanletter = decrypt_shift < 'a' ? decrypt_shift + 26 : decrypt_shift;
-						++j;
-					// With format preservation:
+					decrypt_shift = tolower(rawletter) \
+							- key[key_ind % keylen];
+
+					if(islower(rawletter)){
+						if(decrypt_shift < 0){
+							rawletter = decrypt_shift + 26 + 'a';
+						} else{
+							rawletter = decrypt_shift + 'a';
+						}
 					} else{
-						decrypt_shift = rawletter - toupper(key[key_ind % keylen]) + 'A';
-						rawletter = decrypt_shift < 'A' ? decrypt_shift + 26 : decrypt_shift;
+						if(decrypt_shift < 0){
+							rawletter = decrypt_shift + 26 + 'A';
+						} else{
+							rawletter = decrypt_shift + 'A';
+						}
 					}
 				}
 			}
-
-			++key_ind;
 		}
 
 		if(p_optflag == 0){
@@ -194,6 +189,8 @@ int main(int argc, char* argv[]){
 		} else{
 			printf("%c", rawletter);
 		}
+
+		++key_ind;
 	}
 
 	fclose(plaintext);
