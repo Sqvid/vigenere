@@ -178,6 +178,8 @@ int main(int argc, char* argv[]){
 					}
 				}
 			}
+
+			++key_ind;
 		} else{
 			if(p_optflag == 0){
 				continue;
@@ -189,8 +191,6 @@ int main(int argc, char* argv[]){
 		} else{
 			printf("%c", rawletter);
 		}
-
-		++key_ind;
 	}
 
 	fclose(plaintext);
