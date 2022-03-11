@@ -15,7 +15,7 @@ Vigenere cipher.\n\
 Usage: [-h] [-p] [-d] -k <key> (-i | -f <file>)\n\n\
 Options:\n\
 -h\t\t-- Shows this help page.\n\
--i\t\t-- Sets the program to interactive mode. (Cannot be used with -f)\n\
+-i\t\t-- Accept input from stdin. (Cannot be used with -f)\n\
 -f <file>\t-- Specifies the input file. (Cannot be used with -i)\n\
 -k <key>\t-- Specifies the cipher key.\n\
 -d\t\t-- Sets the program to decryption mode.\n\
@@ -33,7 +33,7 @@ int main(int argc, char* argv[]){
 
 	while((opt = getopt(argc, argv, "if:k:dph")) != -1){
 		switch(opt){
-			// Interactive mode.
+			// Stdin mode.
 			case 'i':
 				if(f_optflag == 1){
 					fprintf(stderr, "The -i and -f flags cannot be used together.\n");
